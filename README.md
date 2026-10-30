@@ -1,6 +1,6 @@
 # geoetl — config-driven geospatial ETL
 
-![CI](https://github.com/USERNAME/geo-etl-pipeline/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/iDan-Armstrong/geo-etl-pipeline/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
