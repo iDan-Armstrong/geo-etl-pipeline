@@ -1,0 +1,53 @@
+# Example: clean a raw facility CSV, tag each point with its district,
+# project to Web Mercator, QA-gate the result, and write a GeoPackage.
+#
+#   geoetl run examples/facilities_pipeline.yml --qa-report out/qa_report.md
+
+name: facilities_demo
+
+source:
+  path: examples/data/facilities_raw.csv
+  format: csv
+  x_field: LON
+  y_field: LAT
+  crs: EPSG:4326
+
+clean:
+  standardize_fields: true     # "Facility Name" -> facility_name
+  repair_geometries: true
+  drop_duplicates: true
+
+transforms:
+  - op: spatial_join           # tag each facility with its district
+    right_path: examples/data/districts.geojson
+    fields: [district]
+  - op: reproject
+    crs: EPSG:3857
+  - op: zscore                 # flag bed-count outliers for review
+    field: beds
+
+qa:
+  on_fail: quarantine          # failing rows go to *_quarantine.geojson
+  rules:
+    - kind: not_null
+      fields: [facility_name, facility_type]
+    - kind: unique
+      field: facility_id
+    - kind: in_set
+      field: facility_type
+      values: [clinic, hospital, health_post, pharmacy]
+    - kind: range
+      field: beds
+      min: 0
+      max: 500
+    - kind: geometry_valid
+    - kind: within_bounds      # catches null-island rows (EPSG:3857 bounds of the AOI)
+      minx: -8650000
+      miny: 440000
+      maxx: -8540000
+      maxy: 540000
+
+sink:
+  format: gpkg
+  path: out/facilities_clean.gpkg
+  layer: facilities
